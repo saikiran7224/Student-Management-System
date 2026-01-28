@@ -1,0 +1,16 @@
+# random files
+student_app
+*.exe
+*.out
+*.o
+
+# vscode
+.vscode/
+
+# generated files
+data/students.txt
+data/students.csv
+
+# OS files
+.DS_Store
+Thumbs.db
