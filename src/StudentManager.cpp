@@ -4,12 +4,26 @@
 #include <sstream>
 #include <algorithm>
 #include <iomanip>
+#include <cctype>
+
 using namespace std;
+
+bool isNumeric(const string &str) {
+    if (str.empty()) return false;
+
+    for (char c : str) {
+        if (!isdigit(c)) {
+            return false;
+        }
+    }
+    return true;
+}
 
 StudentManager::StudentManager() {
     loadFromFile();
 }
 
+/* ---------- LOAD FROM FILE ---------- */
 void StudentManager::loadFromFile() {
     ifstream file("students.txt");
     string line;
@@ -31,6 +45,7 @@ void StudentManager::loadFromFile() {
     file.close();
 }
 
+/* ---------- SAVE TO FILE ---------- */
 void StudentManager::saveToFile() {
     ofstream file("students.txt");
     for (auto &s : students) {
@@ -42,13 +57,20 @@ void StudentManager::saveToFile() {
 /* ---------- ADD STUDENT ---------- */
 void StudentManager::addStudent() {
     int id, age;
-    string name, cls, contact;
+    string idStr, name, cls, contact;
 
     cout << "Enter ID: ";
-    cin >> id;
+    cin >> idStr;
+
+    if (!isNumeric(idStr)) {
+        cout << "Invalid ID! ID should be in numeric.\n";
+        return;
+    }
+
+    id = stoi(idStr);
 
     if (id <= 0) {
-        cout << "Invalid ID!\n";
+        cout << "Invalid ID! ID must be positive.\n";
         return;
     }
 
@@ -73,11 +95,15 @@ void StudentManager::addStudent() {
     cout << "Enter Class: ";
     cin >> cls;
 
-    cout << "Enter Contact: ";
-    cin >> contact;
-    if (contact.length() != 10) {
-        cout << "Contact must be 10 digits!\n";
-        return;
+    while (true) {
+        cout << "Enter Contact (10 digits): ";
+        cin >> contact;
+
+        if (contact.length() == 10 && isNumeric(contact)) {
+            break;
+        }
+
+        cout << "Invalid contact number! Please enter exactly 10 digits.\n";
     }
 
     students.push_back(Student(id, name, age, cls, contact));
@@ -85,7 +111,7 @@ void StudentManager::addStudent() {
     cout << "Student added successfully!\n";
 }
 
-/* ---------- VIEW STUDENTS (Pagination) ---------- */
+/* ---------- VIEW STUDENTS ---------- */
 void StudentManager::viewStudents() {
     int pageSize = 5;
     int count = 0;
@@ -110,7 +136,7 @@ void StudentManager::viewStudents() {
     }
 }
 
-/* ---------- SEARCH ---------- */
+/* ---------- SEARCH STUDENT ---------- */
 void StudentManager::searchStudent() {
     int choice;
     cout << "1. Search by ID\n2. Search by Name\n";
@@ -118,7 +144,9 @@ void StudentManager::searchStudent() {
 
     if (choice == 1) {
         int id;
+        cout << "Enter ID: ";
         cin >> id;
+
         for (auto &s : students) {
             if (s.getId() == id) {
                 s.display();
@@ -128,7 +156,9 @@ void StudentManager::searchStudent() {
     } else {
         string name;
         cin.ignore();
+        cout << "Enter Name: ";
         getline(cin, name);
+
         for (auto &s : students) {
             if (s.getName() == name) {
                 s.display();
@@ -139,7 +169,7 @@ void StudentManager::searchStudent() {
     cout << "Student not found!\n";
 }
 
-/* ---------- UPDATE ---------- */
+/* ---------- UPDATE STUDENT ---------- */
 void StudentManager::updateStudent() {
     int id;
     cout << "Enter ID to update: ";
@@ -153,29 +183,32 @@ void StudentManager::updateStudent() {
             cin.ignore();
             cout << "New Name: ";
             getline(cin, name);
+
             cout << "New Age: ";
             cin >> age;
+
             cout << "New Class: ";
             cin >> cls;
+
             cout << "New Contact: ";
             cin >> contact;
 
             s = Student(id, name, age, cls, contact);
             saveToFile();
-            cout << "Student updated!\n";
+            cout << "Student updated successfully!\n";
             return;
         }
     }
     cout << "Student not found!\n";
 }
 
-/* ---------- DELETE ---------- */
+/* ---------- DELETE STUDENT ---------- */
 void StudentManager::deleteStudent() {
     int id;
     cout << "Enter ID to delete: ";
     cin >> id;
 
-    for (auto it = students.begin(); it != students.end(); it++) {
+    for (auto it = students.begin(); it != students.end(); ++it) {
         if (it->getId() == id) {
             char confirm;
             cout << "Confirm delete (y/n): ";
@@ -184,7 +217,7 @@ void StudentManager::deleteStudent() {
             if (confirm == 'y' || confirm == 'Y') {
                 students.erase(it);
                 saveToFile();
-                cout << "Student deleted!\n";
+                cout << "Student deleted successfully!\n";
             }
             return;
         }
@@ -192,7 +225,7 @@ void StudentManager::deleteStudent() {
     cout << "Student not found!\n";
 }
 
-/* ---------- SORT ---------- */
+/* ---------- SORT STUDENTS ---------- */
 void StudentManager::sortStudents() {
     int choice;
     cout << "1. Sort by ID\n2. Sort by Name\n";
@@ -209,6 +242,7 @@ void StudentManager::sortStudents() {
                  return a.getName() < b.getName();
              });
     }
+
     cout << "Sorted successfully!\n";
 }
 
@@ -216,9 +250,11 @@ void StudentManager::sortStudents() {
 void StudentManager::exportToCSV() {
     ofstream file("students.csv");
     file << "ID,Name,Age,Class,Contact\n";
+
     for (auto &s : students) {
         file << s.toFileString() << endl;
     }
+
     file.close();
     cout << "Exported to students.csv successfully!\n";
 }
